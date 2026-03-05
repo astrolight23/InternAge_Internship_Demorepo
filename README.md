@@ -1,171 +1,123 @@
-# InternAge_Internship_Demorepo
+# InternAge Internship Demo Repo
 
-# 🚀 Deploy HTML Site to GHCR Using GitHub Actions
-
-Perfect 👍 Let’s deploy your simple HTML site to **GHCR** automatically using **GitHub Actions**.
-
-This will:
-
-- ✅ Build the Docker image  
-- ✅ Push it to **ghcr.io**  
-- ✅ Run automatically on every push to `main`
+A demo project showcasing a containerized HTML weather app (**Skycast**) deployed to the GitHub Container Registry (GHCR) using GitHub Actions.
 
 ---
 
-# 1️⃣ Project Structure
+## 🌤️ Project Overview
 
-Your repo should look like this:
+**Skycast** is a lightweight, single-file weather app built with vanilla HTML, CSS, and JavaScript. It fetches live weather data from the OpenWeatherMap API and displays current conditions plus a 5-day forecast for any city in the world.
 
+This repo demonstrates a simple but complete CI/CD pipeline: every push to `main` automatically builds a Docker image and publishes it to GHCR — no manual steps required.
+
+---
+
+## 🐳 Pull & Run the Docker Image
+
+Make sure you have [Docker](https://www.docker.com/get-started) installed, then run:
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/astrolight23/internage_internship_demorepo:latest
+
+# Run the container
+docker run -d -p 8080:80 ghcr.io/astrolight23/internage_internship_demorepo:latest
 ```
 
-.
-├── index.html
-├── Dockerfile
-└── .github/
-└── workflows/
-└── docker.yml
+Then open your browser and visit:
 
-````
+```
+http://localhost:8080
+```
 
----
+> **Note for Apple Silicon (M-series) Mac users:** You may see a platform mismatch warning (`linux/amd64` vs `linux/arm64`). The container will still run correctly via emulation.
 
-# 2️⃣ Your `index.html`
+### Useful Docker Commands
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <title>My Simple Site</title>
-</head>
-<body>
-  <h1>Hello from GHCR 🚀</h1>
-</body>
-</html>
-````
+```bash
+# List running containers
+docker ps
 
----
+# Stop the container
+docker stop <CONTAINER_ID>
 
-# 3️⃣ Your Dockerfile
-
-```dockerfile
-FROM nginx:alpine
-RUN rm -rf /usr/share/nginx/html/*
-COPY index.html /usr/share/nginx/html/
-EXPOSE 80
+# Run and auto-remove on exit
+docker run --rm -p 8080:80 ghcr.io/astrolight23/internage_internship_demorepo:latest
 ```
 
 ---
 
-# 4️⃣ Create GitHub Actions Workflow
+## ⚙️ GitHub Actions CI/CD
 
-Create this file:
+Every push to the `main` branch triggers the workflow defined in `.github/workflows/deploy.yml`, which:
 
-```
-.github/workflows/docker.yml
-```
-
-### `docker.yml`
+1. **Checks out** the repository code
+2. **Logs in** to GHCR using the automatically provided `GITHUB_TOKEN` (no secrets setup needed)
+3. **Extracts metadata** — generates tags like `latest` and a SHA-based tag for traceability
+4. **Builds and pushes** the Docker image to `ghcr.io/astrolight23/internage_internship_demorepo`
 
 ```yaml
-name: Build and Push to GHCR
+name: Deploy to GHCR
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
-permissions:
-  contents: read
-  packages: write
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: astrolight23/internage_internship_demorepo
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Log in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker image
-        run: |
-          docker build -t ghcr.io/${{ github.repository }}:latest .
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha
+            type=raw,value=latest
 
-      - name: Push Docker image
-        run: |
-          docker push ghcr.io/${{ github.repository }}:latest
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 ```
+
+### Image Tags
+
+| Tag | Description |
+|-----|-------------|
+| `latest` | Most recent build from `main` |
+| `sha-xxxxxxx` | Pinned to a specific commit SHA |
 
 ---
 
-# 5️⃣ How It Works
+## 🛠️ Tech Stack
 
-* `GITHUB_TOKEN` is automatically provided by GitHub
-* No need to create a Personal Access Token
-* Image name becomes:
-
-```
-ghcr.io/OWNER/REPO:latest
-```
-
-Example:
-
-```
-ghcr.io/john/my-simple-site:latest
-```
-
----
-
-# 6️⃣ After Pushing
-
-1. Push your code to `main`
-2. Go to:
-
-   * Your repo → **Actions** tab
-3. You’ll see the workflow running
-4. After success:
-
-   * Go to your GitHub profile → **Packages**
-   * Your container will be there 🎉
-
----
-
-# 7️⃣ Make It Public (Optional)
-
-1. Profile → Packages
-2. Select your container
-3. Change visibility to **Public**
-
----
-
-# 🚀 Run the Image Anywhere
-
-```bash
-docker run -p 8080:80 ghcr.io/OWNER/REPO:latest
-```
-
----
-
-## 🔥 Next Steps
-
-You can enhance this setup with:
-
-* 🔥 Auto-version tagging (`v1.0.0` instead of `latest`)
-* 🔥 Multi-arch builds (amd64 + arm64)
-* 🔥 Automatic VPS deployment after push
-* 🔥 Kubernetes deployment pipeline
-
-```
-
----
-
-If you'd like, I can also generate:
-
-- 📄 A production-ready README.md version  
-- 🏢 Enterprise-grade CI/CD markdown documentation  
-- 📦 A full DevOps project template structure  
-
-Just tell me the level you want.
-```
+| Layer | Technology |
+|-------|------------|
+| Frontend | HTML, CSS, JavaScript |
+| Server | nginx (Alpine) |
+| Container | Docker |
+| Registry | GitHub Container Registry (GHCR) |
+| CI/CD | GitHub Actions |
