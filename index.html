@@ -2,229 +2,449 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Modern Dockerized website deployed via GitHub Actions to GHCR." />
-  <meta property="og:title" content="Advanced Docker Site" />
-  <meta property="og:description" content="Production-ready static site with animations and theme toggle." />
-  <meta property="og:type" content="website" />
-  <title>Advanced Docker Site</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Skycast</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-      --bg: #ffffff;
-      --text: #111827;
-      --primary: #2563eb;
-      --card: #f3f4f6;
-    }
-
-    [data-theme="dark"] {
-      --bg: #0f172a;
-      --text: #f1f5f9;
-      --primary: #3b82f6;
-      --card: #1e293b;
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
+      --sky: #0a0f1e;
+      --card: rgba(255,255,255,0.05);
+      --border: rgba(255,255,255,0.08);
+      --accent: #4fc3f7;
+      --warm: #ffb347;
+      --text: #e8edf5;
+      --muted: rgba(232,237,245,0.45);
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      background: var(--sky);
       color: var(--text);
-      transition: background 0.3s ease, color 0.3s ease;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      overflow-x: hidden;
+    }
+
+    /* animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(79,195,247,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(255,179,71,0.08) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .stars {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: white;
+      animation: twinkle var(--d, 3s) ease-in-out infinite;
+      opacity: 0;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; }
+      50% { opacity: var(--op, 0.6); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* Header */
+    .brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.4em;
+      color: var(--accent);
+      text-align: center;
+      margin-bottom: 2.5rem;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.1s;
+    }
+
+    /* Search */
+    .search-wrap {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.2s;
+    }
+    .search-wrap input {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.85rem 1.2rem;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-wrap input::placeholder { color: var(--muted); }
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-wrap button {
+      background: var(--accent);
+      border: none;
+      border-radius: 12px;
+      padding: 0.85rem 1.3rem;
+      color: #0a0f1e;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .search-wrap button:hover { opacity: 0.85; transform: scale(0.97); }
+
+    /* Main card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2rem;
+      backdrop-filter: blur(20px);
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.3s;
+    }
+
+    .location-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .city {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 0.05em;
+      line-height: 1;
+    }
+    .date-time {
+      text-align: right;
+      color: var(--muted);
+      font-size: 0.8rem;
       line-height: 1.6;
     }
 
-    header {
-      padding: 1.5rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      background: var(--bg);
-      border-bottom: 1px solid rgba(0,0,0,0.05);
-      backdrop-filter: blur(10px);
-      z-index: 1000;
-    }
-
-    nav a {
-      margin-left: 1.5rem;
-      text-decoration: none;
-      color: var(--text);
-      font-weight: 500;
-      transition: color 0.2s ease;
-    }
-
-    nav a:hover {
-      color: var(--primary);
-    }
-
+    /* Big temp display */
     .hero {
-      min-height: 90vh;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      padding: 2rem;
-      animation: fadeIn 1.2s ease forwards;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
     }
-
-    .hero h1 {
-      font-size: clamp(2.5rem, 5vw, 4rem);
-      margin-bottom: 1rem;
-      background: linear-gradient(90deg, var(--primary), #9333ea);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .weather-icon {
+      font-size: 5rem;
+      line-height: 1;
+      filter: drop-shadow(0 0 20px rgba(79,195,247,0.4));
+      animation: float 4s ease-in-out infinite;
     }
-
-    .hero p {
-      max-width: 600px;
-      margin: 0 auto 2rem;
-      opacity: 0.8;
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
     }
-
-    .btn {
-      padding: 0.8rem 1.5rem;
-      border: none;
-      border-radius: 50px;
-      background: var(--primary);
-      color: white;
-      cursor: pointer;
+    .temp-block {}
+    .temp {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 5.5rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .temp span { font-size: 2.5rem; color: var(--muted); }
+    .condition {
       font-size: 1rem;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      text-transform: capitalize;
     }
 
-    .btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-    }
-
-    section {
-      padding: 5rem 2rem;
-      max-width: 1200px;
-      margin: auto;
-    }
-
-    .grid {
+    /* Stats row */
+    .stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 2rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.9rem;
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 500;
     }
 
-    .card {
-      background: var(--card);
-      padding: 2rem;
-      border-radius: 16px;
-      transition: transform 0.3s ease;
+    /* Forecast */
+    .forecast-title {
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
     }
-
-    .card:hover {
-      transform: translateY(-8px);
+    .forecast {
+      display: flex;
+      gap: 0.5rem;
     }
+    .fc-day {
+      flex: 1;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.75rem 0.5rem;
+      text-align: center;
+    }
+    .fc-name {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .fc-icon { font-size: 1.4rem; margin-bottom: 0.4rem; }
+    .fc-temp { font-size: 0.95rem; font-weight: 500; }
+    .fc-low { font-size: 0.75rem; color: var(--muted); }
 
-    footer {
+    /* Error / loading */
+    .message {
       text-align: center;
       padding: 2rem;
-      opacity: 0.6;
+      color: var(--muted);
+      font-size: 0.9rem;
     }
+    .error { color: #ef9a9a; }
 
-    .theme-toggle {
-      cursor: pointer;
-      border: none;
+    /* Toggle */
+    .unit-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.25s;
+    }
+    .unit-btn {
       background: none;
-      font-size: 1.2rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.35rem 0.8rem;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .unit-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #0a0f1e;
+      font-weight: 600;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
-
 <body>
-  <header>
-    <h2>🚀 DockerSite</h2>
-    <nav>
-      <a href="#features">Features</a>
-      <a href="#about">About</a>
-      <button class="theme-toggle" aria-label="Toggle theme">🌙</button>
-    </nav>
-  </header>
 
-  <main>
-    <section class="hero">
-      <div>
-        <h1>Production-Ready Static Site</h1>
-        <p>
-          Deployed automatically with GitHub Actions and published to GHCR.
-          Fully responsive, animated, and theme-aware.
-        </p>
-        <button class="btn" onclick="scrollToFeatures()">Explore Features</button>
-      </div>
-    </section>
+<div class="stars" id="stars"></div>
 
-    <section id="features">
-      <h2 style="text-align:center; margin-bottom:3rem;">Features</h2>
-      <div class="grid">
-        <div class="card">
-          <h3>⚡ Fast</h3>
-          <p>Served by NGINX inside a lightweight Docker container.</p>
-        </div>
-        <div class="card">
-          <h3>🎨 Modern UI</h3>
-          <p>Gradient typography, animations, responsive grid layout.</p>
-        </div>
-        <div class="card">
-          <h3>🌙 Dark Mode</h3>
-          <p>Automatic theme switching with persistent preference.</p>
-        </div>
-      </div>
-    </section>
+<div class="container">
+  <div class="brand">✦ Skycast ✦</div>
 
-    <section id="about">
-      <h2 style="text-align:center; margin-bottom:2rem;">About This Project</h2>
-      <p style="text-align:center; max-width:700px; margin:auto;">
-        This static website is containerized with Docker, built using GitHub Actions,
-        and distributed through GHCR. It demonstrates production-grade frontend
-        architecture without external frameworks.
-      </p>
-    </section>
-  </main>
+  <div class="search-wrap">
+    <input type="text" id="cityInput" placeholder="Search city…" />
+    <button onclick="fetchWeather()">Search</button>
+  </div>
 
-  <footer>
-    © 2026 DockerSite — Built for CI/CD demonstration
-  </footer>
+  <div class="unit-toggle">
+    <button class="unit-btn active" id="btnC" onclick="setUnit('metric')">°C</button>
+    <button class="unit-btn" id="btnF" onclick="setUnit('imperial')">°F</button>
+  </div>
 
-  <script>
-    const toggleBtn = document.querySelector('.theme-toggle');
-    const currentTheme = localStorage.getItem('theme');
+  <div class="card" id="weatherCard">
+    <div class="message">Enter a city name to get started.</div>
+  </div>
+</div>
 
-    if (currentTheme) {
-      document.documentElement.setAttribute('data-theme', currentTheme);
-      toggleBtn.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
+<script>
+  // ── Stars ──────────────────────────────────────────────
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2 + 1;
+    s.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%; top:${Math.random()*100}%;
+      --d:${(Math.random()*4+2).toFixed(1)}s;
+      --op:${(Math.random()*0.5+0.2).toFixed(2)};
+      animation-delay:${(Math.random()*5).toFixed(1)}s;
+    `;
+    starsEl.appendChild(s);
+  }
+
+  // ── State ─────────────────────────────────────────────
+  const API_KEY = 'bd5e378503939ddaee76f12ad7a97608'; // free OpenWeatherMap demo key
+  let unit = 'metric';
+  let lastCity = '';
+
+  function setUnit(u) {
+    unit = u;
+    document.getElementById('btnC').classList.toggle('active', u === 'metric');
+    document.getElementById('btnF').classList.toggle('active', u === 'imperial');
+    if (lastCity) fetchWeather(lastCity);
+  }
+
+  // ── Weather icons ──────────────────────────────────────
+  const iconMap = {
+    '01d':'☀️','01n':'🌙','02d':'⛅','02n':'☁️',
+    '03d':'☁️','03n':'☁️','04d':'☁️','04n':'☁️',
+    '09d':'🌧️','09n':'🌧️','10d':'🌦️','10n':'🌧️',
+    '11d':'⛈️','11n':'⛈️','13d':'❄️','13n':'❄️',
+    '50d':'🌫️','50n':'🌫️'
+  };
+
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  // ── Fetch ─────────────────────────────────────────────
+  async function fetchWeather(city) {
+    city = city || document.getElementById('cityInput').value.trim();
+    if (!city) return;
+    lastCity = city;
+
+    const card = document.getElementById('weatherCard');
+    card.innerHTML = `<div class="message"><span class="loading-spinner"></span>Fetching weather…</div>`;
+
+    try {
+      const [cur, fore] = await Promise.all([
+        fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=${unit}`).then(r => r.json()),
+        fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=${unit}`).then(r => r.json())
+      ]);
+
+      if (cur.cod !== 200) throw new Error(cur.message || 'City not found');
+
+      renderWeather(cur, fore);
+    } catch(e) {
+      card.innerHTML = `<div class="message error">⚠️ ${e.message}</div>`;
     }
+  }
 
-    toggleBtn.addEventListener('click', () => {
-      const theme = document.documentElement.getAttribute('data-theme') === 'dark'
-        ? 'light'
-        : 'dark';
+  function renderWeather(cur, fore) {
+    const unitSym = unit === 'metric' ? '°C' : '°F';
+    const speedUnit = unit === 'metric' ? 'm/s' : 'mph';
+    const icon = iconMap[cur.weather[0].icon] || '🌡️';
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+    const timeStr = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
 
-      document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('theme', theme);
-      toggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    // Next 5 days from forecast (one per day at noon)
+    const dailyMap = {};
+    fore.list.forEach(item => {
+      const d = new Date(item.dt * 1000);
+      const key = d.toDateString();
+      if (!dailyMap[key]) dailyMap[key] = [];
+      dailyMap[key].push(item);
     });
+    const forecastDays = Object.entries(dailyMap).slice(1, 6);
 
-    function scrollToFeatures() {
-      document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
-    }
-  </script>
+    const fcHTML = forecastDays.map(([dateKey, items]) => {
+      const d = new Date(dateKey);
+      const temps = items.map(i => i.main.temp);
+      const high = Math.round(Math.max(...temps));
+      const low  = Math.round(Math.min(...temps));
+      const ico  = iconMap[items[Math.floor(items.length/2)].weather[0].icon] || '🌡️';
+      return `
+        <div class="fc-day">
+          <div class="fc-name">${days[d.getDay()]}</div>
+          <div class="fc-icon">${ico}</div>
+          <div class="fc-temp">${high}${unitSym}</div>
+          <div class="fc-low">${low}${unitSym}</div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('weatherCard').innerHTML = `
+      <div class="location-row">
+        <div class="city">${cur.name}, ${cur.sys.country}</div>
+        <div class="date-time"><div>${dateStr}</div><div>${timeStr}</div></div>
+      </div>
+      <div class="hero">
+        <div class="weather-icon">${icon}</div>
+        <div class="temp-block">
+          <div class="temp">${Math.round(cur.main.temp)}<span>${unitSym}</span></div>
+          <div class="condition">${cur.weather[0].description} · feels like ${Math.round(cur.main.feels_like)}${unitSym}</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Humidity</div>
+          <div class="stat-value">${cur.main.humidity}%</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Wind</div>
+          <div class="stat-value">${cur.wind.speed} ${speedUnit}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Visibility</div>
+          <div class="stat-value">${(cur.visibility/1000).toFixed(1)} km</div>
+        </div>
+      </div>
+      <div class="forecast-title">5-Day Forecast</div>
+      <div class="forecast">${fcHTML}</div>
+    `;
+  }
+
+  // Enter key support
+  document.getElementById('cityInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') fetchWeather();
+  });
+
+  // Default city on load
+  fetchWeather('London');
+</script>
 </body>
 </html>
