@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Modern Dockerized website deployed via GitHub Actions to GHCR." />
+  <meta property="og:title" content="Advanced Docker Site" />
+  <meta property="og:description" content="Production-ready static site with animations and theme toggle." />
+  <meta property="og:type" content="website" />
+  <title>Advanced Docker Site</title>
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #111827;
+      --primary: #2563eb;
+      --card: #f3f4f6;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --text: #f1f5f9;
+      --primary: #3b82f6;
+      --card: #1e293b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s ease, color 0.3s ease;
+      line-height: 1.6;
+    }
+
+    header {
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+    }
+
+    nav a {
+      margin-left: 1.5rem;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    nav a:hover {
+      color: var(--primary);
+    }
+
+    .hero {
+      min-height: 90vh;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 2rem;
+      animation: fadeIn 1.2s ease forwards;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, var(--primary), #9333ea);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      max-width: 600px;
+      margin: 0 auto 2rem;
+      opacity: 0.8;
+    }
+
+    .btn {
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 50px;
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    }
+
+    section {
+      padding: 5rem 2rem;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+    }
+
+    .card {
+      background: var(--card);
+      padding: 2rem;
+      border-radius: 16px;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      opacity: 0.6;
+    }
+
+    .theme-toggle {
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-size: 1.2rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h2>🚀 DockerSite</h2>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#about">About</a>
+      <button class="theme-toggle" aria-label="Toggle theme">🌙</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <h1>Production-Ready Static Site</h1>
+        <p>
+          Deployed automatically with GitHub Actions and published to GHCR.
+          Fully responsive, animated, and theme-aware.
+        </p>
+        <button class="btn" onclick="scrollToFeatures()">Explore Features</button>
+      </div>
+    </section>
+
+    <section id="features">
+      <h2 style="text-align:center; margin-bottom:3rem;">Features</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>⚡ Fast</h3>
+          <p>Served by NGINX inside a lightweight Docker container.</p>
+        </div>
+        <div class="card">
+          <h3>🎨 Modern UI</h3>
+          <p>Gradient typography, animations, responsive grid layout.</p>
+        </div>
+        <div class="card">
+          <h3>🌙 Dark Mode</h3>
+          <p>Automatic theme switching with persistent preference.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="about">
+      <h2 style="text-align:center; margin-bottom:2rem;">About This Project</h2>
+      <p style="text-align:center; max-width:700px; margin:auto;">
+        This static website is containerized with Docker, built using GitHub Actions,
+        and distributed through GHCR. It demonstrates production-grade frontend
+        architecture without external frameworks.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    © 2026 DockerSite — Built for CI/CD demonstration
+  </footer>
+
+  <script>
+    const toggleBtn = document.querySelector('.theme-toggle');
+    const currentTheme = localStorage.getItem('theme');
+
+    if (currentTheme) {
+      document.documentElement.setAttribute('data-theme', currentTheme);
+      toggleBtn.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      const theme = document.documentElement.getAttribute('data-theme') === 'dark'
+        ? 'light'
+        : 'dark';
+
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      toggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    });
+
+    function scrollToFeatures() {
+      document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
